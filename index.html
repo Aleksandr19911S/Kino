@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Мягкий Кинотеатр — Продажа билетов</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #16213e; margin: 0; color: #fff; }
+        .topbar { background: #222; padding: 0 40px; display: flex; align-items: center; justify-content: space-between; height: 60px; }
+        .logo { font-size: 1.5em; font-weight: bold; color: #ff2e7a; letter-spacing: 2px; }
+        .city { margin-left: 30px; font-size: 1em; color: #7ed6df; }
+        .menu { display: flex; gap: 25px; align-items: center; }
+        .menu a { color: #fff; text-decoration: none; font-size: 1em; transition: color 0.2s; }
+        .menu a:hover { color: #ff2e7a; }
+        .login { background: none; border: 1px solid #fff; color: #fff; border-radius: 20px; padding: 6px 18px; margin-left: 20px; cursor: pointer; transition: border 0.2s, color 0.2s; }
+        .login:hover { border: 1px solid #ff2e7a; color: #ff2e7a; }
+        .slider { position: relative; background: #1b2746; padding: 40px 0 20px 0; display: flex; justify-content: center; align-items: center; gap: 0; }
+        .slides-wrapper { display: flex; width: 420px; height: 210px; overflow: hidden; position: relative; }
+        .slide { min-width: 100%; height: 210px; opacity: 0; transition: opacity 0.4s; position: absolute; left: 0; top: 0; z-index: 1; pointer-events: none; }
+        .slide.active { opacity: 1; z-index: 2; pointer-events: auto; position: relative; }
+        .slider-btn { background: rgba(34,34,34,0.8); border: none; color: #fff; font-size: 2em; width: 48px; height: 48px; border-radius: 50%; cursor: pointer; position: relative; z-index: 3; margin: 0 10px; transition: background 0.2s; }
+        .slider-btn:hover { background: #ff2e7a; }
+        .schedule-section { max-width: 900px; margin: 40px auto 0 auto; background: #1b2746; border-radius: 16px; padding: 30px 30px 40px 30px; }
+        .schedule-title { font-size: 1.3em; margin-bottom: 20px; font-weight: bold; }
+        .dates { display: flex; gap: 18px; margin-bottom: 30px; overflow-x: auto; }
+        .date { background: #222; border-radius: 10px; padding: 10px 18px; text-align: center; min-width: 90px; cursor: pointer; transition: background 0.2s; }
+        .date.selected, .date:hover { background: #ff2e7a; color: #fff; }
+        .movie-card { display: flex; gap: 24px; align-items: flex-start; background: #222; border-radius: 12px; padding: 18px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+        .movie-card img { width: 120px; height: 170px; border-radius: 8px; object-fit: cover; }
+        .movie-info { flex: 1; }
+        .movie-title { font-size: 1.1em; font-weight: bold; margin-bottom: 8px; }
+        .movie-meta { font-size: 0.95em; color: #7ed6df; margin-bottom: 10px; }
+        .movie-desc { font-size: 0.95em; color: #ccc; margin-bottom: 12px; }
+        .showtimes { display: flex; gap: 12px; align-items: center; }
+        .showtime {
+            background: #ff2e7a;
+            color: #fff;
+            border-radius: 12px;
+            padding: 8px 18px 6px 18px;
+            font-weight: bold;
+            font-size: 1.08em;
+            cursor: pointer;
+            border: none;
+            transition: background 0.2s, box-shadow 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 64px;
+            box-shadow: 0 2px 8px rgba(255,46,122,0.08);
+        }
+        .showtime:hover {
+            background: #b00610;
+            box-shadow: 0 4px 16px rgba(255,46,122,0.13);
+        }
+        .showtime-price {
+            margin: 0;
+            padding: 0;
+            font-size: 0.98em;
+            color: #ffe0f0;
+            font-weight: 400;
+            line-height: 1.1;
+            opacity: 0.95;
+        }
+        @media (max-width: 1000px) {
+            .slider { flex-direction: column; align-items: center; }
+            .slide { width: 90vw; height: 40vw; max-width: 420px; max-height: 210px; }
+            .schedule-section { padding: 15px; }
+        }
+        /* --- Адаптив для мобильных устройств --- */
+        @media (max-width: 600px) {
+            body { font-size: 16px; padding: 0 2vw; }
+            .topbar { flex-direction: column; align-items: flex-start; height: auto; padding: 10px 10px 0 10px; gap: 8px; }
+            .logo { font-size: 1.2em; }
+            .city { margin-left: 12px; font-size: 0.98em; }
+            .menu { flex-direction: column; gap: 10px; align-items: flex-start; width: 100%; padding-bottom: 10px; }
+            .login { margin-left: 0; margin-top: 6px; width: 100%; }
+            .slider { padding: 18px 0 10px 0; }
+            .slides-wrapper { width: 98vw; height: 44vw; max-width: 100vw; max-height: 220px; }
+            .slide { height: 44vw; max-height: 220px; }
+            .slider-btn { width: 38px; height: 38px; font-size: 1.3em; margin: 0 2px; }
+            .schedule-section { max-width: 100vw; padding: 8px 2vw 18px 2vw; border-radius: 10px; }
+            .dates { gap: 8px; }
+            .date { min-width: 70px; padding: 7px 8px; font-size: 0.98em; }
+            .movie-card { flex-direction: column; align-items: stretch; gap: 10px; padding: 10px; }
+            .movie-card img { width: 100%; height: auto; min-height: 120px; max-height: 220px; }
+            .movie-title { font-size: 1em; }
+            .movie-meta, .movie-desc { font-size: 0.95em; }
+            .showtimes { flex-wrap: wrap; gap: 8px; }
+            .showtime { min-width: 48px; font-size: 0.98em; padding: 7px 8px 5px 8px; }
+        }
+        @media (max-width: 400px) {
+            .topbar { padding: 6px 2vw 0 2vw; }
+            .logo { font-size: 1em; }
+            .slides-wrapper, .slide { height: 38vw; }
+            .schedule-section { padding: 4px 1vw 10px 1vw; }
+            .movie-card { padding: 6px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="topbar">
+        <div style="display: flex; align-items: center;">
+            <span class="logo">МЯГКИЙ<br>КИНОТЕАТР</span>
+            <span class="city">Магнитогорск</span>
+        </div>
+        <nav class="menu">
+            <a href="#">Пушкинская карта</a>
+            <a href="#">Расписание</a>
+            <a href="#">Фильмы</a>
+            <a href="#">Кинобонусы</a>
+            <a href="#">Ещё</a>
+            <button class="login">Войти</button>
+        </nav>
+    </div>
+    <div class="slider" id="slider">
+        <button class="slider-btn left" id="sliderPrev" aria-label="Назад">&#8592;</button>
+        <div class="slides-wrapper">
+            <div class="slide active">
+                <img src="img/fantastic-four.jpg" alt="Фантастическая четверка" style="object-fit:contain;width:100%;height:100%;border-radius: 8px;">
+            </div>
+            <div class="slide">
+                <img src="img/superman.jpg" alt="Супермен" style="object-fit:contain;width:100%;height:100%;border-radius: 8px;">
+            </div>
+            <div class="slide">
+                <img src="img/jurassic-world.jpg" alt="Мир Юрского Периода" style="object-fit:contain;width:100%;height:100%;border-radius: 8px;">
+            </div>
+            <div class="slide">
+                <img src="img/barbie.jpg" alt="Барби" style="object-fit:contain;width:100%;height:100%;border-radius: 8px;">
+            </div>
+            <div class="slide">
+                <img src="img/oppenheimer.jpg" alt="Оппенгеймер" style="object-fit:contain;width:100%;height:100%;border-radius: 8px;">
+            </div>
+            <div class="slide">
+                <img src="img/spiderman.jpg" alt="Человек-Паук" style="object-fit:contain;width:100%;height:100%;border-radius: 8px;">
+            </div>
+            <div class="slide">
+                <img src="img/mission-impossible.jpg" alt="Миссия невыполнима" style="object-fit:contain;width:100%;height:100%;border-radius: 8px;">
+            </div>
+            <div class="slide">
+                <img src="img/avatar2.jpg" alt="Аватар 2" style="object-fit:contain;width:100%;height:100%;border-radius: 8px;">
+            </div>
+        </div>
+        <button class="slider-btn right" id="sliderNext" aria-label="Вперёд">&#8594;</button>
+    </div>
+    <div class="schedule-section">
+        <div class="schedule-title">Расписание сеансов</div>
+        <div class="dates" id="datesBar">
+            <div class="date selected" data-day="0">Сегодня<br><span style="font-size:0.9em;">21 июня</span></div>
+            <div class="date" data-day="1">Завтра<br><span style="font-size:0.9em;">22 июня</span></div>
+            <div class="date" data-day="2">Среда<br><span style="font-size:0.9em;">23 июня</span></div>
+            <div class="date" data-day="3">Четверг<br><span style="font-size:0.9em;">24 июня</span></div>
+            <div class="date" data-day="4">Пятница<br><span style="font-size:0.9em;">25 июня</span></div>
+            <div class="date" data-day="5">Суббота<br><span style="font-size:0.9em;">26 июня</span></div>
+            <div class="date" data-day="6">Воскресенье<br><span style="font-size:0.9em;">27 июня</span></div>
+        </div>
+        <div id="scheduleMovies"></div>
+    </div>
+    <div id="modal" class="modal-overlay" style="display:none;">
+        <div class="modal-window">
+            <button class="modal-close" id="modalClose">&times;</button>
+            <div class="modal-header">
+                <div class="modal-movie-title" id="modalMovieTitle">Название фильма</div>
+                <div class="modal-session-info" id="modalSessionInfo">Зал 1 • 21 июня 2025, 18:00</div>
+            </div>
+            <div class="modal-session-time" id="modalSessionTime">18:00 <span class="modal-session-price">350₽</span></div>
+            <div class="modal-hall">
+                <div class="hall-label">Схема зала</div>
+                <div class="hall-seats" id="hallSeats">
+                    <!-- Места будут сгенерированы JS -->
+                </div>
+                <div class="hall-legend">
+                    <span class="seat seat-free"></span> — свободно
+                    <span class="seat seat-taken"></span> — занято
+                    <span class="seat seat-selected"></span> — выбрано
+                </div>
+            </div>
+            <div class="modal-footer">
+                <span class="modal-auth">Для начисления и оплаты бонусами <a href="#" style="color:#ff2e7a;text-decoration:underline;">авторизуйтесь</a></span>
+                <button class="modal-buy-btn" id="modalBuyBtn">Купить билеты</button>
+            </div>
+        </div>
+    </div>
+    <div id="qrModal" class="modal-overlay" style="display:none;">
+        <div class="modal-window" style="text-align:center; max-width:340px;">
+            <button class="modal-close" id="qrModalClose">&times;</button>
+            <div style="font-size:1.1em; font-weight:bold; margin-bottom:12px;">Оплата по СБП</div>
+            <div style="margin-bottom:16px;">Отсканируйте QR-код в приложении банка</div>
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=https://sbp.nspk.ru/" alt="QR для оплаты по СБП" style="border-radius:12px; margin-bottom:18px; box-shadow:0 2px 8px rgba(0,0,0,0.12);">
+            <br>
+            <button class="modal-buy-btn" id="qrBackBtn" style="margin-top:10px;">Вернуться на сайт</button>
+        </div>
+    </div>
+    <div id="feedbackModal" class="modal-overlay" style="display:none;">
+        <div class="modal-window" style="max-width:400px;">
+            <button class="modal-close" id="feedbackModalClose">&times;</button>
+            <div style="font-size:1.15em; font-weight:bold; margin-bottom:14px;">Оставить отзыв</div>
+            <form id="feedbackForm" autocomplete="off">
+                <div style="margin-bottom:12px;">
+                    <textarea id="feedbackText" rows="4" style="width:100%;border-radius:8px;border:1px solid #b6c6e3;padding:8px;font-size:1em;resize:vertical;" placeholder="Ваш отзыв..." required></textarea>
+                </div>
+                <div style="margin-bottom:16px;">
+                    <input id="feedbackContact" type="text" style="width:100%;border-radius:8px;border:1px solid #b6c6e3;padding:8px;font-size:1em;" placeholder="Ваше имя или контакт (необязательно)">
+                </div>
+                <button type="submit" class="modal-buy-btn" style="width:100%;">Отправить</button>
+            </form>
+            <div id="feedbackThanks" style="display:none; color:#2AABEE; font-weight:bold; text-align:center; margin-top:18px;">Спасибо за ваш отзыв!</div>
+        </div>
+    </div>
+    <div id="authModal" class="modal-overlay" style="display:none;">
+        <div class="modal-window" style="max-width:370px;">
+            <button class="modal-close" id="authModalClose">&times;</button>
+            <div style="display:flex; gap:10px; margin-bottom:18px;">
+                <button id="authTabLogin" class="auth-tab active" type="button">Вход</button>
+                <button id="authTabRegister" class="auth-tab" type="button">Регистрация</button>
+            </div>
+            <form id="loginForm" autocomplete="off">
+                <input type="text" id="loginEmail" placeholder="E-mail или телефон" required style="width:100%;margin-bottom:12px;padding:8px;border-radius:8px;border:1px solid #b6c6e3;font-size:1em;">
+                <input type="password" id="loginPassword" placeholder="Пароль" required style="width:100%;margin-bottom:16px;padding:8px;border-radius:8px;border:1px solid #b6c6e3;font-size:1em;">
+                <button type="submit" class="modal-buy-btn" style="width:100%;">Войти</button>
+            </form>
+            <form id="registerForm" autocomplete="off" style="display:none;">
+                <input type="text" id="registerName" placeholder="Ваше имя" required style="width:100%;margin-bottom:12px;padding:8px;border-radius:8px;border:1px solid #b6c6e3;font-size:1em;">
+                <input type="text" id="registerEmail" placeholder="E-mail или телефон" required style="width:100%;margin-bottom:12px;padding:8px;border-radius:8px;border:1px solid #b6c6e3;font-size:1em;">
+                <input type="password" id="registerPassword" placeholder="Пароль" required style="width:100%;margin-bottom:16px;padding:8px;border-radius:8px;border:1px solid #b6c6e3;font-size:1em;">
+                <button type="submit" class="modal-buy-btn" style="width:100%;">Зарегистрироваться</button>
+            </form>
+            <div id="authThanks" style="display:none; color:#2AABEE; font-weight:bold; text-align:center; margin-top:18px;">Спасибо! Вы успешно авторизованы.</div>
+        </div>
+    </div>
+    <style>
+        .modal-overlay { position: fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(10,20,40,0.85); display:flex; align-items:center; justify-content:center; z-index:1000; }
+        .modal-window { background:#fff; color:#222; border-radius:16px; max-width:500px; width:96vw; padding:20px 16px 16px 16px; position:relative; box-shadow:0 8px 32px rgba(0,0,0,0.25); font-size:0.97em; }
+        .modal-close { position:absolute; top:14px; right:14px; background:none; border:none; font-size:1.7em; color:#888; cursor:pointer; }
+        .modal-header { margin-bottom:8px; }
+        .modal-movie-title { font-size:1.1em; font-weight:bold; margin-bottom:2px; }
+        .modal-session-info { font-size:0.95em; color:#7ed6df; margin-bottom:6px; }
+        .modal-session-time { display:inline-block; background:#1b2746; color:#fff; border-radius:8px; padding:6px 14px; font-size:1em; margin-bottom:14px; }
+        .modal-session-price { margin-left:8px; color:#ff2e7a; font-weight:bold; }
+        .modal-hall { margin:12px 0 12px 0; }
+        .hall-label { font-size:0.97em; margin-bottom:6px; }
+        .hall-seats { display:grid; grid-template-columns:repeat(12,26px); gap:5px; background:#0d1a2b; border-radius:10px; padding:10px 4px; justify-content:center; margin-bottom:8px; }
+        .seat { width:26px; height:26px; border-radius:6px; background:#7ed6df; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:0.95em; cursor:pointer; transition:background 0.2s, color 0.2s; user-select:none; }
+        .seat-taken { background:#222 !important; color:#888 !important; cursor:not-allowed; }
+        .seat-selected { background:#ff2e7a !important; color:#fff !important; }
+        .seat-free { background:#7ed6df; color:#fff; }
+        .hall-legend { font-size:0.9em; margin-bottom:8px; }
+        .modal-footer { display:flex; align-items:center; justify-content:space-between; margin-top:12px; }
+        .modal-auth { color:#ff2e7a; font-size:0.92em; }
+        .modal-buy-btn { background:#ffb6d5; color:#fff; border:none; border-radius:20px; padding:8px 22px; font-size:1em; font-weight:bold; cursor:pointer; transition:background 0.2s; }
+        .modal-buy-btn:hover { background:#ff2e7a; }
+        @media (max-width:700px) { .modal-window { padding:8px 1vw 8px 1vw; } .hall-seats { grid-template-columns:repeat(8,20px); gap:3px; padding:6px 1px; } }
+        .auth-tab {
+            flex:1;
+            background:#e6eaf3;
+            color:#1b2746;
+            border:none;
+            border-radius:8px 8px 0 0;
+            padding:10px 0;
+            font-size:1.08em;
+            font-weight:600;
+            cursor:pointer;
+            transition: background 0.18s, color 0.18s;
+        }
+        .auth-tab.active {
+            background:#2AABEE;
+            color:#fff;
+        }
+    </style>
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        let currentSlide = 0;
+        const prevBtn = document.getElementById('sliderPrev');
+        const nextBtn = document.getElementById('sliderNext');
+        let autoSlideInterval = null;
+        const AUTO_SLIDE_DELAY = 4000;
+
+        function showSlide(index) {
+            slides.forEach((slide, i) => {
+                slide.classList.toggle('active', i === index);
+            });
+        }
+
+        function nextSlide() {
+            currentSlide = (currentSlide + 1) % slides.length;
+            showSlide(currentSlide);
+        }
+        function prevSlide() {
+            currentSlide = (currentSlide - 1 + slides.length) % slides.length;
+            showSlide(currentSlide);
+        }
+
+        function startAutoSlide() {
+            if (autoSlideInterval) clearInterval(autoSlideInterval);
+            autoSlideInterval = setInterval(nextSlide, AUTO_SLIDE_DELAY);
+        }
+
+        prevBtn.addEventListener('click', () => {
+            prevSlide();
+            startAutoSlide();
+        });
+        nextBtn.addEventListener('click', () => {
+            nextSlide();
+            startAutoSlide();
+        });
+
+        // Запуск автопрокрутки при загрузке
+        showSlide(currentSlide);
+        startAutoSlide();
+
+        // Модалка выбора мест
+        const modal = document.getElementById('modal');
+        const modalClose = document.getElementById('modalClose');
+        const modalMovieTitle = document.getElementById('modalMovieTitle');
+        const modalSessionInfo = document.getElementById('modalSessionInfo');
+        const modalSessionTime = document.getElementById('modalSessionTime');
+        const hallSeats = document.getElementById('hallSeats');
+        let selectedSeats = [];
+
+        // Примерная схема зала: 8 рядов по 12 мест, часть мест занята
+        const rows = 8, cols = 12;
+        // 0 — свободно, 1 — занято
+        const takenSeats = [
+            [0,0,0,0,0,0,0,0,0,0,0,0],
+            [0,0,1,1,0,0,0,1,1,0,0,0],
+            [0,1,1,0,0,0,0,0,1,1,0,0],
+            [0,0,0,0,1,1,1,0,0,0,0,0],
+            [0,0,0,1,1,1,1,1,0,0,0,0],
+            [0,0,0,0,0,0,0,0,0,0,0,0],
+            [0,1,0,0,0,0,0,0,0,1,0,0],
+            [0,0,0,0,0,0,0,0,0,0,0,0],
+        ];
+
+        function renderSeats() {
+            hallSeats.innerHTML = '';
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    const seat = document.createElement('div');
+                    seat.className = 'seat ' + (takenSeats[r][c] ? 'seat-taken' : 'seat-free');
+                    seat.textContent = c+1;
+                    seat.dataset.row = r+1;
+                    seat.dataset.col = c+1;
+                    if (takenSeats[r][c]) seat.setAttribute('aria-disabled', 'true');
+                    seat.addEventListener('click', function() {
+                        if (takenSeats[r][c]) return;
+                        const seatId = `${r+1}-${c+1}`;
+                        if (selectedSeats.includes(seatId)) {
+                            selectedSeats = selectedSeats.filter(s => s !== seatId);
+                            seat.classList.remove('seat-selected');
+                        } else {
+                            selectedSeats.push(seatId);
+                            seat.classList.add('seat-selected');
+                        }
+                    });
+                    hallSeats.appendChild(seat);
+                }
+            }
+        }
+
+        // Открытие модалки по клику на showtime
+        document.querySelectorAll('.showtime').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                const movieCard = btn.closest('.movie-card');
+                const title = movieCard.querySelector('.movie-title').textContent;
+                const meta = movieCard.querySelector('.movie-meta').textContent;
+                const time = btn.querySelector('span:first-child').textContent;
+                const price = btn.querySelector('.showtime-price').textContent;
+                modalMovieTitle.textContent = title;
+                modalSessionInfo.textContent = meta;
+                modalSessionTime.innerHTML = `${time} <span class='modal-session-price'>${price}</span>`;
+                selectedSeats = [];
+                renderSeats();
+                modal.style.display = 'flex';
+            });
+        });
+        modalClose.addEventListener('click', () => { modal.style.display = 'none'; });
+        window.addEventListener('keydown', e => { if (e.key === 'Escape') modal.style.display = 'none'; });
+        modal.addEventListener('click', e => { if (e.target === modal) modal.style.display = 'none'; });
+        document.getElementById('modalBuyBtn').addEventListener('click', function() {
+            modal.style.display = 'none';
+            document.getElementById('qrModal').style.display = 'flex';
+        });
+        document.getElementById('qrModalClose').addEventListener('click', function() {
+            document.getElementById('qrModal').style.display = 'none';
+        });
+        document.getElementById('qrBackBtn').addEventListener('click', function() {
+            document.getElementById('qrModal').style.display = 'none';
+        });
+
+        // --- Рандомное расписание фильмов ---
+        const allMovies = [
+            {
+                title: 'Фантастическая четверка',
+                meta: 'США, фантастика, 2 часа 5 минут, 12+',
+                desc: 'Герои Marvel вновь спасают мир от зла и хаоса!',
+                img: 'img/fantastic-four.jpg',
+                times: ['10:00', '12:00', '15:30', '18:00', '20:30'],
+                prices: [250, 320, 400, 450, 500]
+            },
+            {
+                title: 'Супермен',
+                meta: 'США, боевик, 2 часа 10 минут, 12+',
+                desc: 'Новая история о легендарном супергерое.',
+                img: 'img/superman.jpg',
+                times: ['11:00', '13:00', '16:00', '19:30'],
+                prices: [270, 350, 400, 470]
+            },
+            {
+                title: 'Мир Юрского Периода',
+                meta: 'США, приключения, 2 часа 20 минут, 12+',
+                desc: 'Динозавры возвращаются на большой экран!',
+                img: 'img/jurassic-world.jpg',
+                times: ['09:30', '11:30', '17:00', '21:00'],
+                prices: [230, 290, 390, 500]
+            },
+            {
+                title: 'Барби',
+                meta: 'США, комедия, 1 час 50 минут, 6+',
+                desc: 'Яркая и весёлая история о приключениях Барби.',
+                img: 'img/barbie.jpg',
+                times: ['10:00', '14:00', '16:00'],
+                prices: [200, 270, 350]
+            },
+            {
+                title: 'Оппенгеймер',
+                meta: 'США, драма, 3 часа, 16+',
+                desc: 'История создателя атомной бомбы.',
+                img: 'img/oppenheimer.jpg',
+                times: ['15:00', '20:00'],
+                prices: [350, 500]
+            },
+            {
+                title: 'Человек-Паук',
+                meta: 'США, приключения, 2 часа 8 минут, 12+',
+                desc: 'Паук вновь спасает город от злодеев!',
+                img: 'img/spiderman.jpg',
+                times: ['12:30', '17:30'],
+                prices: [250, 390]
+            },
+            {
+                title: 'Миссия невыполнима',
+                meta: 'США, боевик, 2 часа 25 минут, 16+',
+                desc: 'Новая невыполнимая миссия для Итана Ханта.',
+                img: 'img/mission-impossible.jpg',
+                times: ['13:30', '18:30', '22:00'],
+                prices: [270, 420, 500]
+            },
+            {
+                title: 'Аватар 2',
+                meta: 'США, фантастика, 2 часа 45 минут, 12+',
+                desc: 'Продолжение легендарной истории на Пандоре.',
+                img: 'img/avatar2.jpg',
+                times: ['10:30', '15:00', '19:00'],
+                prices: [220, 350, 480]
+            }
+        ];
+        // Для каждого дня генерируем расписание
+        const daysCount = 7;
+        const randomSchedules = Array.from({length: daysCount}, () => {
+            // Случайное количество фильмов (3-5)
+            const shuffled = allMovies.slice().sort(() => Math.random() - 0.5);
+            const count = Math.floor(Math.random() * 3) + 3;
+            return shuffled.slice(0, count).map(movie => {
+                // Случайное количество сеансов (2-4)
+                const times = movie.times.slice().sort(() => Math.random() - 0.5);
+                const prices = movie.prices;
+                const seansCount = Math.floor(Math.random() * 3) + 2;
+                return {
+                    ...movie,
+                    showtimes: times.slice(0, seansCount).map((t, i) => ({
+                        time: t,
+                        price: prices[i % prices.length]
+                    }))
+                };
+            });
+        });
+        function renderSchedule(dayIdx) {
+            const schedule = randomSchedules[dayIdx];
+            const container = document.getElementById('scheduleMovies');
+            container.innerHTML = '';
+            schedule.forEach(movie => {
+                const card = document.createElement('div');
+                card.className = 'movie-card';
+                card.innerHTML = `
+                    <img src="${movie.img}" alt="${movie.title}">
+                    <div class="movie-info">
+                        <div class="movie-title">${movie.title}</div>
+                        <div class="movie-meta">${movie.meta}</div>
+                        <div class="movie-desc">${movie.desc}</div>
+                        <div class="showtimes">
+                            ${movie.showtimes.map(st => `<button class='showtime'><span>${st.time}</span><span class='showtime-price'>${st.price}₽</span></button>`).join('')}
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+            // Повесить обработчики на новые showtime
+            container.querySelectorAll('.showtime').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    const movieCard = btn.closest('.movie-card');
+                    const title = movieCard.querySelector('.movie-title').textContent;
+                    const meta = movieCard.querySelector('.movie-meta').textContent;
+                    const time = btn.querySelector('span:first-child').textContent;
+                    const price = btn.querySelector('.showtime-price').textContent;
+                    modalMovieTitle.textContent = title;
+                    modalSessionInfo.textContent = meta;
+                    modalSessionTime.innerHTML = `${time} <span class='modal-session-price'>${price}</span>`;
+                    selectedSeats = [];
+                    renderSeats();
+                    modal.style.display = 'flex';
+                });
+            });
+        }
+        // Переключение дней
+        document.querySelectorAll('.date').forEach(dateBtn => {
+            dateBtn.addEventListener('click', function() {
+                document.querySelectorAll('.date').forEach(d => d.classList.remove('selected'));
+                this.classList.add('selected');
+                renderSchedule(Number(this.dataset.day));
+            });
+        });
+        // Рендерим расписание для первого дня
+        renderSchedule(0);
+    </script>
+    <footer class="footer">
+        <div class="footer-main">
+            <div class="footer-col">
+                <div class="footer-title">Кинотеатр</div>
+                <a href="#">Пушкинская карта</a>
+                <a href="#">Кресла</a>
+                <a href="#">Новости</a>
+                <a href="#">Акции и скидки</a>
+                <a href="#">Вакансии <span style='color:#ff2e7a;font-size:1em;'>❤</span></a>
+                <a href="#">Помощь</a>
+            </div>
+            <div class="footer-col">
+                <div class="footer-title">Афиша</div>
+                <a href="#">Расписание</a>
+                <a href="#">Фильмы</a>
+                <a href="#">Реклама</a>
+                <a href="#">Контакты</a>
+                <a href="#">Личный кабинет</a>
+                <a href="#">Кинобонус</a>
+            </div>
+            <div class="footer-col footer-contacts">
+                <div class="footer-title">Контакты</div>
+                <div class="footer-socials">
+                    <a href="https://t.me/Aleksander_Shahrai" class="footer-social-btn telegram" title="Telegram" aria-label="Telegram">
+                        <span class="footer-social-icon">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#2AABEE"/><path d="M17.6 7.6L15.7 16.1C15.6 16.6 15.3 16.7 14.9 16.5L12.4 14.7L11.2 15.8C11.1 15.9 11 16 10.8 16L11 13.5L15.3 9.7C15.5 9.5 15.3 9.4 15 9.6L9.2 13.1L6.8 12.4C6.3 12.2 6.3 11.9 6.9 11.7L16.8 7.4C17.2 7.3 17.5 7.5 17.6 7.6Z" fill="#fff"/></svg>
+                        </span>
+                        <span class="footer-social-text">Telegram</span>
+                    </a>
+                    <a href="#" class="footer-social-btn instagram" title="Instagram" aria-label="Instagram">
+                        <span class="footer-social-icon">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                                <defs>
+                                    <radialGradient id="ig2" cx="50%" cy="50%" r="80%">
+                                        <stop offset="0%" stop-color="#fdf497"/>
+                                        <stop offset="45%" stop-color="#fdf497"/>
+                                        <stop offset="60%" stop-color="#fd5949"/>
+                                        <stop offset="90%" stop-color="#d6249f"/>
+                                        <stop offset="100%" stop-color="#285AEB"/>
+                                    </radialGradient>
+                                </defs>
+                                <rect x="2" y="2" width="20" height="20" rx="6" fill="url(#ig2)"/>
+                                <circle cx="12" cy="12" r="5" fill="none" stroke="#fff" stroke-width="2"/>
+                                <circle cx="17.2" cy="6.8" r="1.2" fill="#fff"/>
+                            </svg>
+                        </span>
+                        <span class="footer-social-text">Instagram</span>
+                    </a>
+                </div>
+                <div class="footer-phone">8 (3519) 393-392</div>
+                <button class="footer-feedback">Оставить отзыв</button>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <div class="footer-apps">
+                <a href="#" class="footer-app-btn"><img src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg" alt="Google Play" style="height:32px;"></a>
+                <a href="#" class="footer-app-btn"><img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" alt="App Store" style="height:32px;"></a>
+            </div>
+        </div>
+    </footer>
+    <style>
+        .footer { background: linear-gradient(90deg, #1b2746 0%, #233a5e 100%); color: #fff; padding: 56px 0 0 0; font-size: 1em; margin-top: 60px; }
+        .footer-main { display: flex; justify-content: center; gap: 90px; max-width: 1200px; margin: 0 auto 0 auto; padding-bottom: 44px; flex-wrap: wrap; }
+        .footer-col { min-width: 200px; display: flex; flex-direction: column; gap: 16px; }
+        .footer-title { font-size: 1.18em; font-weight: bold; margin-bottom: 18px; color: #b6c6e3; letter-spacing: 0.5px; }
+        .footer-col a:not(:last-child) { margin-bottom: 8px; }
+        .footer-col a { color: #fff; text-decoration: none; font-size: 1em; transition: color 0.2s; }
+        .footer-col a:hover { color: #ff2e7a; }
+        .footer-contacts { min-width: 260px; gap: 18px; }
+        .footer-socials { margin: 18px 0 10px 0; display: flex; gap: 16px; }
+        .footer-social-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-radius: 10px;
+            padding: 0 22px 0 14px;
+            height: 44px;
+            font-size: 1.08em;
+            font-weight: 600;
+            text-decoration: none;
+            color: #fff;
+            background: #2AABEE;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+            transition: background 0.18s, box-shadow 0.18s, transform 0.13s;
+            border: none;
+            outline: none;
+            cursor: pointer;
+        }
+        .footer-social-btn .footer-social-icon { display: flex; align-items: center; }
+        .footer-social-btn .footer-social-text { font-size: 1em; font-weight: 600; }
+        .footer-social-btn.telegram { background: #2AABEE; }
+        .footer-social-btn.telegram:hover { background: #229fdc; box-shadow: 0 4px 16px rgba(42,171,238,0.13); transform: translateY(-2px) scale(1.04); }
+        .footer-social-btn.instagram {
+            background: linear-gradient(90deg, #fdf497 0%, #fd5949 45%, #d6249f 75%, #285AEB 100%);
+            color: #fff;
+        }
+        .footer-social-btn.instagram:hover {
+            filter: brightness(0.95) saturate(1.2);
+            box-shadow: 0 4px 16px rgba(214,36,159,0.13);
+            transform: translateY(-2px) scale(1.04);
+        }
+        .footer-phone { font-size: 1.05em; margin-bottom: 14px; }
+        .footer-feedback { background: #ff2e7a; color: #fff; border: none; border-radius: 18px; padding: 9px 28px; font-size: 1em; cursor: pointer; font-weight: bold; transition: background 0.2s; margin-bottom: 4px; }
+        .footer-feedback:hover { background: #ffb6d5; color: #222; }
+        .footer-bottom { display: flex; justify-content: space-between; align-items: center; background: #16213e; padding: 22px 4vw 16px 4vw; font-size: 0.98em; flex-wrap: wrap; gap: 18px; margin-top: 8px; }
+        .footer-license { color: #b6c6e3; }
+        .footer-license a { color: #ffb6d5; text-decoration: underline; }
+        .footer-apps { display: flex; gap: 10px; }
+        .footer-app-btn img { display: block; height: 32px; }
+        .footer-made { color: #b6c6e3; font-size: 1em; font-weight: bold; letter-spacing: 1px; }
+        @media (max-width: 900px) {
+            .footer-main { flex-direction: column; align-items: flex-start; gap: 38px; padding-left: 4vw; }
+            .footer-bottom { flex-direction: column; align-items: flex-start; gap: 12px; }
+        }
+        @media (max-width: 600px) {
+            .footer { font-size: 0.95em; }
+            .footer-main { gap: 22px; padding-left: 2vw; }
+            .footer-col { min-width: 120px; }
+            .footer-contacts { min-width: 140px; }
+            .footer-socials { flex-direction: column; align-items: center; }
+            .footer-social-btn { width: 100%; text-align: center; }
+        }
+    </style>
+    <script>
+        document.querySelector('.footer-feedback').addEventListener('click', function() {
+            document.getElementById('feedbackModal').style.display = 'flex';
+            document.getElementById('feedbackForm').style.display = '';
+            document.getElementById('feedbackThanks').style.display = 'none';
+            document.getElementById('feedbackText').value = '';
+            document.getElementById('feedbackContact').value = '';
+        });
+        document.getElementById('feedbackModalClose').addEventListener('click', function() {
+            document.getElementById('feedbackModal').style.display = 'none';
+        });
+        document.getElementById('feedbackModal').addEventListener('click', function(e) {
+            if (e.target === this) this.style.display = 'none';
+        });
+        document.getElementById('feedbackForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            document.getElementById('feedbackForm').style.display = 'none';
+            document.getElementById('feedbackThanks').style.display = 'block';
+            // Здесь можно добавить отправку данных на сервер
+        });
+        document.querySelector('.login').addEventListener('click', function() {
+            document.getElementById('authModal').style.display = 'flex';
+            document.getElementById('loginForm').style.display = '';
+            document.getElementById('registerForm').style.display = 'none';
+            document.getElementById('authTabLogin').classList.add('active');
+            document.getElementById('authTabRegister').classList.remove('active');
+            document.getElementById('authThanks').style.display = 'none';
+        });
+        document.getElementById('authModalClose').addEventListener('click', function() {
+            document.getElementById('authModal').style.display = 'none';
+        });
+        document.getElementById('authModal').addEventListener('click', function(e) {
+            if (e.target === this) this.style.display = 'none';
+        });
+        document.getElementById('authTabLogin').addEventListener('click', function() {
+            document.getElementById('loginForm').style.display = '';
+            document.getElementById('registerForm').style.display = 'none';
+            this.classList.add('active');
+            document.getElementById('authTabRegister').classList.remove('active');
+            document.getElementById('authThanks').style.display = 'none';
+        });
+        document.getElementById('authTabRegister').addEventListener('click', function() {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('registerForm').style.display = '';
+            this.classList.add('active');
+            document.getElementById('authTabLogin').classList.remove('active');
+            document.getElementById('authThanks').style.display = 'none';
+        });
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('authThanks').textContent = 'Спасибо! Вы успешно авторизованы.';
+            document.getElementById('authThanks').style.display = 'block';
+        });
+        document.getElementById('registerForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            document.getElementById('registerForm').style.display = 'none';
+            document.getElementById('authThanks').textContent = 'Спасибо за регистрацию!';
+            document.getElementById('authThanks').style.display = 'block';
+        });
+    </script>
+</body>
+</html>
+
